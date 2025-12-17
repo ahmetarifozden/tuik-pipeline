@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tuik
+    ports:
+      - "5432:5432"
+    volumes:
+      - tuik_db:/var/lib/postgresql/data
+
+volumes:
+  tuik_db:

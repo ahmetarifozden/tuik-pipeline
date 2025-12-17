@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+.venv/
+.env
+
+# Data (TÜİK verileri)
+data/
+*.csv
+*.xlsx
+*.json
+
+# IDE
+.vscode/
