@@ -6,8 +6,14 @@ from urllib.parse import urljoin
 from app.core.db import SessionLocal
 from app.models.dataset import Dataset
 from app.services.tuik.client import TuikClient
+from urllib.parse import urlparse
+from sqlalchemy import and_
 
 BASE = "https://data.tuik.gov.tr"
+
+def normalize_download_path(path: str) -> str:
+    return urlparse(path).path
+
 
 def parse_page(html: str):
     soup = BeautifulSoup(html, "lxml")
@@ -21,7 +27,6 @@ def parse_page(html: str):
     for tr in table.select("tbody tr"):
         cls = " ".join(tr.get("class", []))
 
-        # group row
         if "dtrg-group" in cls:
             tds = tr.find_all("td")
             group_text = " ".join(td.get_text(" ", strip=True) for td in tds).strip()
@@ -37,30 +42,45 @@ def parse_page(html: str):
         date_text = tds[1].get_text(" ", strip=True)
 
         a = tds[2].find("a", href=True)
-        download_path = a["href"] if a else None
-        if not title or not download_path:
+        raw_path = a["href"] if a else None
+        if not raw_path:
             continue
+
+        download_path = normalize_download_path(raw_path)
+
 
         items.append({
             "group": current_group,
             "title": title,
             "date": date_text,
             "download_path": download_path,
-            "download_url": urljoin(BASE, download_path),
+            "download_url": urljoin(BASE, raw_path),
         })
+
+    keys = [(it["download_path"], it["title"]) for it in items]
+    print("items:", len(items), "unique:", len(set(keys)))
 
     return items
 
+
 def upsert_items(db: Session, ust_id: int, items: list[dict]):
+    uniq = {}
+    for it in items:
+        key = (ust_id, it["download_path"], it["title"])
+        uniq[key] = it  # aynı key gelirse sonuncusu kalsın
+    items = list(uniq.values())
     new_count = 0
+
     for it in items:
         existing = db.execute(
-            select(Dataset).where(Dataset.download_path == it["download_path"])
+            select(Dataset)
+            .where(Dataset.ust_id == ust_id)
+            .where(Dataset.download_path == it["download_path"])
+            .where(Dataset.title == it["title"])
         ).scalar_one_or_none()
 
+
         if existing:
-            # update (title/date/group değişmiş olabilir)
-            existing.ust_id = ust_id
             existing.group_name = it["group"]
             existing.title = it["title"]
             existing.publish_date_raw = it["date"]
@@ -80,6 +100,8 @@ def upsert_items(db: Session, ust_id: int, items: list[dict]):
     db.commit()
     return new_count
 
+
+
 def main():
     ust_id = 109
     client = TuikClient()
@@ -94,6 +116,7 @@ def main():
         new_count = upsert_items(db, ust_id, items)
 
     print(f"DONE. total_items={len(items)} new_inserted={new_count}")
+
 
 
 if __name__ == "__main__":
