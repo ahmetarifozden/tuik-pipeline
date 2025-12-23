@@ -1,0 +1,8 @@
+crawl:
+  count: 50
+  archived: false
+  stop_on_error: false
+
+targets:
+  - type: keyword
+    query: "evlenme"
