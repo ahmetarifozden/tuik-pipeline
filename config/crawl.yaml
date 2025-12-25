@@ -5,4 +5,4 @@ crawl:
 
 targets:
   - type: keyword
-    query: "kira"
+    query: "okul"
