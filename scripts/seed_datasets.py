@@ -9,10 +9,45 @@ from app.services.tuik.client import TuikClient
 from urllib.parse import urlparse
 from sqlalchemy import and_
 
+from pathlib import Path
+import re
+import yaml
+from urllib.parse import urlparse, parse_qs
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+CATEGORIES_YAML = PROJECT_ROOT / "config" / "categories.yaml"
 BASE = "https://data.tuik.gov.tr"
 
 def normalize_download_path(path: str) -> str:
     return urlparse(path).path
+
+
+def load_ust_ids_from_yaml() -> list[int]:
+    with open(CATEGORIES_YAML, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+
+    urls = data.get("categories_pages", [])
+    ust_ids = []
+    for u in urls:
+        parsed = urlparse(u)
+        p = parse_qs(parsed.query).get("p", [None])[0]
+        if not p:
+            continue
+
+        # p örn: "Cevre-ve-Enerji-103" -> sondaki sayıyı çek
+        m = re.search(r"-(\d+)$", p)
+        if not m:
+            continue
+        ust_ids.append(int(m.group(1)))
+
+    # unique ama sıra korunsun
+    uniq = []
+    seen = set()
+    for x in ust_ids:
+        if x not in seen:
+            seen.add(x)
+            uniq.append(x)
+    return uniq
 
 
 def parse_page(html: str):
@@ -103,19 +138,29 @@ def upsert_items(db: Session, ust_id: int, items: list[dict]):
 
 
 def main():
-    ust_id = 109
     client = TuikClient()
+    ust_ids = load_ust_ids_from_yaml()
+    print(f"[START] categories.yaml içinden ust_id sayısı: {len(ust_ids)} -> {ust_ids}")
 
-    html = client.get_istatistiksel_tablolar(
-        ust_id=ust_id, page=1, count=50, dil_id=1, arsiv=False
-    )
-
-    items = parse_page(html)
+    grand_total = 0
+    grand_new = 0
 
     with SessionLocal() as db:
-        new_count = upsert_items(db, ust_id, items)
+        for ust_id in ust_ids:
+            html = client.get_istatistiksel_tablolar(
+                ust_id=ust_id, page=1, count=50, dil_id=1, arsiv=False
+            )
 
-    print(f"DONE. total_items={len(items)} new_inserted={new_count}")
+            items = parse_page(html)
+            new_count = upsert_items(db, ust_id, items)
+
+            print(f"[UST {ust_id}] total_items={len(items)} new_inserted={new_count}")
+
+            grand_total += len(items)
+            grand_new += new_count
+
+    print(f"[DONE] grand_total_items={grand_total} grand_new_inserted={grand_new}")
+
 
 
 

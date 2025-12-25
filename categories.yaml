@@ -1,0 +1,47 @@
+categories_pages:
+- name: Türkçe
+  url: https://data.tuik.gov.tr/
+- name: English
+  url: https://data.tuik.gov.tr/
+- name: Adalet ve Seçim
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Adalet-ve-Secim-110
+- name: Bilim, Teknoloji ve Bilgi Toplumu
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Bilim,-Teknoloji-ve-Bilgi-Toplumu-102
+- name: Çevre ve Enerji
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Cevre-ve-Enerji-103
+- name: Dış Ticaret
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Dis-Ticaret-104
+- name: Eğitim, Kültür, Spor ve Turizm
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Egitim,-Kultur,-Spor-ve-Turizm-105
+- name: Ekonomik Güven
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Ekonomik-Guven-117
+- name: Enflasyon ve Fiyat
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Enflasyon-ve-Fiyat-106
+- name: Gelir, Yaşam, Tüketim ve Yoksulluk
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Gelir,-Yasam,-Tuketim-ve-Yoksulluk-107
+- name: İnşaat ve Konut
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Insaat-ve-Konut-116
+- name: İstihdam, İşsizlik ve Ücret
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Istihdam,-Issizlik-ve-Ucret-108
+- name: Nüfus ve Demografi
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Nufus-ve-Demografi-109
+- name: Sağlık ve Sosyal Koruma
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Saglik-ve-Sosyal-Koruma-101
+- name: Sanayi
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Sanayi-114
+- name: Tarım
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Tarim-111
+- name: Ticaret ve Hizmet
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Ticaret-ve-Hizmet-115
+- name: Ulaştırma ve Haberleşme
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Ulastirma-ve-Haberlesme-112
+- name: Ulusal Hesaplar
+  url: https://data.tuik.gov.tr/Kategori/GetKategori?p=Ulusal-Hesaplar-113
+- name: nüfus
+  url: javascript:SetSearchBar('nüfus')
+- name: ihracat
+  url: javascript:SetSearchBar('ihracat')
+- name: tüfe
+  url: javascript:SetSearchBar('tüfe')
+- name: göç
+  url: javascript:SetSearchBar('göç')
