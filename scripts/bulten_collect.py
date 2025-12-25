@@ -185,7 +185,7 @@ async def collect_bultens(keyword: str, limit: int = 50, headless: bool = True, 
 
 async def main():
     KEYWORD = sys.argv[1] if len(sys.argv) > 1 else "ihracat"
-    LIMIT = 3
+    LIMIT = 50
     HEADLESS = True      # debug için False yap
     OUT = "config/bulten.yaml"
 
