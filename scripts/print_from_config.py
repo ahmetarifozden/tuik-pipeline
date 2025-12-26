@@ -1,6 +1,7 @@
 import argparse
 import re
 from pathlib import Path
+import csv
 
 import yaml
 import requests
@@ -23,7 +24,7 @@ def load_config(path: str) -> dict:
 def fetch_rows_by_keyword(db: Session, q: str):
     q = q.strip()
     stmt = (
-        select(Dataset.group_name, Dataset.title, Dataset.download_url)
+        select(Dataset.id, Dataset.group_name, Dataset.title, Dataset.download_url)
         .where(
             or_(
                 Dataset.group_name.ilike(f"%{q}%"),
@@ -157,7 +158,7 @@ def main():
             total += len(rows)
 
             print(f'\n=== KEYWORD: "{kw}" | found={len(rows)} ===')
-            for i, (group_name, title, download_url) in enumerate(rows, start=1):
+            for i, (dataset_id, group_name, title, download_url) in enumerate(rows, start=1):
                 print(f"{i:04d})")
                 print(f"  group_name : {group_name}")
                 print(f"  title      : {title}")
@@ -191,11 +192,17 @@ def main():
 
             kw_folder = DOWNLOADS_ROOT / safe_dirname(kw)
             kw_folder.mkdir(parents=True, exist_ok=True)
-
+            manifest_path = kw_folder / "manifest.csv"
+            manifest_f = open(manifest_path, "w", newline="", encoding="utf-8")
+            writer = csv.DictWriter(
+                manifest_f,
+                fieldnames=["dataset_id","keyword","group_name","title","download_url","saved_path"],
+            )
+            writer.writeheader()
             ok = 0
             fail = 0
 
-            for i, (group_name, title, url) in enumerate(rows, start=1):
+            for i, (dataset_id, group_name, title, url) in enumerate(rows, start=1):
                 if not url:
                     continue
 
@@ -205,6 +212,14 @@ def main():
 
                 try:
                     saved = download_one(url, title, group_folder)
+                    writer.writerow({
+                        "dataset_id": dataset_id,
+                        "keyword": kw,
+                        "group_name": group_name,
+                        "title": title,
+                        "download_url": url,
+                        "saved_path": str(saved),
+                    })
                     ok += 1
                     print(f'[{kw}] {i:04d}) OK  -> {group_folder.name}/{saved.name}')
                 except Exception as e:
@@ -217,6 +232,9 @@ def main():
             grand_ok += ok
             grand_fail += fail
             print(f'[DONE] "{kw}" indirilen={ok} hata={fail} klasör={kw_folder}')
+        
+        manifest_f.close()
+        print(f"[MANIFEST] yazıldı -> {manifest_path}")
 
         print(f"\n[DOWNLOAD SUMMARY] ok={grand_ok} fail={grand_fail} root=./downloads")
 
