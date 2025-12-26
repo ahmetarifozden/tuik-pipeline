@@ -43,6 +43,24 @@ def safe_dirname(text: str, max_len: int = 80) -> str:
     text = text[:max_len].strip("_")
     return text or "keyword"
 
+def normalize_title(title: str) -> str:
+    """
+    Başta geçen 'İstatistiksel Tablolar' ifadesini (çeşitli tire/boşluk varyasyonlarıyla)
+    kaldırır ve temiz bir title döndürür.
+    """
+    s = (title or "").strip()
+
+    # Başta BOM/garip whitespace olabiliyor
+    s = s.lstrip("\ufeff").strip()
+
+    # TÜİK başlık prefix'i: İstatistiksel Tablolar  / İSTATİSTİKSEL TABLOLAR
+    # Ardından gelebilecek: "-", "–", "—", ":", "|", "»" vb. ayraçları da temizle
+    pattern = r"^\s*istatistiksel\s+tablolar\s*([\-–—:|»]\s*)?"
+    s = re.sub(pattern, "", s, flags=re.IGNORECASE).strip()
+
+    # Eğer tamamen boş kaldıysa fallback
+    return s or (title or "untitled").strip()
+
 
 def safe_filename(text: str, max_len: int = 200) -> str:
     text = (text or "").strip()
@@ -81,7 +99,10 @@ def download_one(url: str, title: str, out_dir: Path) -> Path:
     data = resp.content
 
     ext = sniff_extension_from_bytes(data)
-    fname = safe_filename(title) + ext
+
+    clean_title = normalize_title(title)   # <-- ekledik
+    fname = safe_filename(clean_title) + ext
+
     path = unique_path(out_dir / fname)
     path.write_bytes(data)
     return path
@@ -168,28 +189,34 @@ def main():
             if not rows:
                 continue
 
-            folder = DOWNLOADS_ROOT / safe_dirname(kw)
-            folder.mkdir(parents=True, exist_ok=True)
+            kw_folder = DOWNLOADS_ROOT / safe_dirname(kw)
+            kw_folder.mkdir(parents=True, exist_ok=True)
 
             ok = 0
             fail = 0
 
-            for i, (_, title, url) in enumerate(rows, start=1):
+            for i, (group_name, title, url) in enumerate(rows, start=1):
                 if not url:
                     continue
+
+                # keyword klasörü altında group klasörü
+                group_folder = kw_folder / safe_dirname(group_name or "unknown_group")
+                group_folder.mkdir(parents=True, exist_ok=True)
+
                 try:
-                    saved = download_one(url, title, folder)
+                    saved = download_one(url, title, group_folder)
                     ok += 1
-                    print(f'[{kw}] {i:04d}) OK  -> {saved.name}')
+                    print(f'[{kw}] {i:04d}) OK  -> {group_folder.name}/{saved.name}')
                 except Exception as e:
                     fail += 1
                     print(f'[{kw}] {i:04d}) ERR -> {title}')
-                    print(f"      url: {url}")
-                    print(f"      err: {e}")
+                    print(f"      group: {group_name}")
+                    print(f"      url  : {url}")
+                    print(f"      err  : {e}")
 
             grand_ok += ok
             grand_fail += fail
-            print(f'[DONE] "{kw}" indirilen={ok} hata={fail} klasör={folder}')
+            print(f'[DONE] "{kw}" indirilen={ok} hata={fail} klasör={kw_folder}')
 
         print(f"\n[DOWNLOAD SUMMARY] ok={grand_ok} fail={grand_fail} root=./downloads")
 
