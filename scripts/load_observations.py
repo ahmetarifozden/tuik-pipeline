@@ -70,7 +70,12 @@ def main():
 
                 # dataset_id bul
                 source_file = df["source_file"].iloc[0] if "source_file" in df.columns else str(csv_path)
-                dataset_id = guess_dataset_id(db, source_file)
+                if "dataset_id" in df.columns:
+                    dataset_id = int(df["dataset_id"].iloc[0])
+                else:
+                    dataset_id = guess_dataset_id(db, source_file)
+
+                #dataset_id = guess_dataset_id(db, source_file)
                 if not dataset_id:
                     raise RuntimeError(f"dataset_id bulunamadı (eşleşmedi): {source_file}")
 

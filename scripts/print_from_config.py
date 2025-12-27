@@ -212,11 +212,12 @@ def main():
 
                 try:
                     saved = download_one(url, title, group_folder)
+                    clean_title = normalize_title(title)
                     writer.writerow({
                         "dataset_id": dataset_id,
                         "keyword": kw,
                         "group_name": group_name,
-                        "title": title,
+                        "title": clean_title,
                         "download_url": url,
                         "saved_path": str(saved),
                     })
