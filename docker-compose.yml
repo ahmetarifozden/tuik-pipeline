@@ -1,14 +1,40 @@
 services:
   db:
     image: postgres:16
+    container_name: tuik-pipeline-db-1
+    restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tuik
+      POSTGRES_USER: tuik_user
+      POSTGRES_PASSWORD: tuik_pass_123
+      POSTGRES_DB: tuik_db
     ports:
       - "5432:5432"
     volumes:
-      - tuik_db:/var/lib/postgresql/data
+      - tuik_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U tuik_user -d tuik_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: tuik-pipeline-app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mounts for development (optional - remove for production)
+      - ./config:/app/config
+      - ./downloads:/app/downloads
+      - ./src:/app/src
+      - ./scripts:/app/scripts
+    # If users wants to iterate fast without rebuild, mounting src is good.
+    # Command can be overridden in docker-compose if needed.
 
 volumes:
-  tuik_db:
+  tuik_db_data:
