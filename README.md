@@ -110,3 +110,5 @@ This will start the API server and Database. You can then access the API at `htt
 *   `config/`: YAML configuration files.
 *   `downloads/`: Directory where raw Excel files are saved.
 *   `normalized/`: Directory for processed CSV files.
+
+Geliştirici: Arif Özden
